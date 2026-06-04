@@ -43,4 +43,25 @@ function Install-MarkItDown {
     return ($LASTEXITCODE -eq 0)
 }
 
-Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Install-Python, Install-MarkItDown
+function Confirm-Runtime {
+    param([Parameter(Mandatory)][hashtable]$Strings)
+    Add-Type -AssemblyName System.Windows.Forms
+
+    $ver = Get-PythonVersion
+    if (-not (Test-PythonVersion -Version $ver)) {
+        $ans = [System.Windows.Forms.MessageBox]::Show($Strings['runtime.pythonMissing'], $Strings['toast.title'], 'YesNo', 'Question')
+        if ($ans -ne 'Yes') { return $false }
+        if (-not (Install-Python)) {
+            [System.Windows.Forms.MessageBox]::Show($Strings['runtime.pythonManual'], $Strings['toast.title'], 'OK', 'Information') | Out-Null
+            return $false
+        }
+    }
+    if (-not (Test-MarkItDownInstalled)) {
+        $ans = [System.Windows.Forms.MessageBox]::Show($Strings['runtime.markitdownMissing'], $Strings['toast.title'], 'YesNo', 'Question')
+        if ($ans -ne 'Yes') { return $false }
+        if (-not (Install-MarkItDown)) { return $false }
+    }
+    return $true
+}
+
+Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Install-Python, Install-MarkItDown, Confirm-Runtime
