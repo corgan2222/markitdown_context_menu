@@ -81,28 +81,36 @@ Explorer right-click
 | `src/modules/Config.psm1` | Read/write the active file-type selection (registry is source of truth); load type catalog from `config/filetypes.default.json` | Registry.psm1 |
 | `src/Configure.ps1` | WinForms checkbox GUI; install/repair, uninstall, markitdown check/install buttons | Registry, Config, Runtime |
 
-## Submenu Structure
+## Menu Structure
 
-A single parent entry **"In Markdown umwandeln"** with a cascading submenu:
+Two top-level context-menu entries are registered:
 
-1. **Speichern (.md)** — write `<name>.md` beside the source.
-2. **In Zwischenablage** — put the Markdown on the clipboard.
-3. **Speichern & öffnen** — write `.md` and open it in the default editor.
+1. **In Markdown umwandeln** — a single direct action (no submenu). Default is
+   **Speichern (.md)** beside the source. The action this entry triggers is
+   **configurable in the GUI** (save | clip | open).
+2. **In Markdown umwandeln (Optionen)** — a cascading submenu offering all
+   actions explicitly:
+   - **Speichern (.md)** — write `<name>.md` beside the source.
+   - **In Zwischenablage** — put the Markdown on the clipboard.
+   - **Speichern & öffnen** — write `.md` and open it in the default editor.
 
-The same submenu is registered for single files, multi-selection, and folders.
+Both entries are registered for single files, multi-selection, and folders.
 
 ## Registry Layout (per-user, HKCU)
 
-- Per file type:
-  `HKCU\Software\Classes\SystemFileAssociations\<.ext>\shell\MarkItDown`
-  with `SubCommands` enabling child verbs
-  `...\shell\MarkItDown\shell\{01_save,02_clip,03_open}\command`.
-  Using `SystemFileAssociations\.<ext>` avoids touching per-type ProgIDs.
-- Folders:
-  `HKCU\Software\Classes\Directory\shell\MarkItDown\...` (command receives the
-  folder path; converter recurses over configured extensions).
+- Per file type, two parent verbs under
+  `HKCU\Software\Classes\SystemFileAssociations\<.ext>\shell\`:
+  - `MarkItDown` — direct action; its `command` invokes the configured default
+    mode.
+  - `MarkItDownOptions` — has `SubCommands` enabling child verbs
+    `...\shell\MarkItDownOptions\shell\{01_save,02_clip,03_open}\command`.
+  - Using `SystemFileAssociations\.<ext>` avoids touching per-type ProgIDs.
+- Folders: the same two parent verbs under
+  `HKCU\Software\Classes\Directory\shell\` (command receives the folder path;
+  converter recurses over configured extensions).
 - Each `command` invokes `wscript HiddenLaunch.vbs <mode> "%1"` (folders use the
-  appropriate folder placeholder).
+  appropriate folder placeholder). The direct entry's `<mode>` is read from the
+  saved default-action setting at registration time.
 
 ## Multi-Select / Batch
 
@@ -124,13 +132,18 @@ windows / N toasts:
   extension.
 - On load: checkbox state reflects what is currently registered (read via
   `Registry.psm1`).
-- **Speichern**: diff selection against registry → add/remove keys accordingly.
+- A **default-action selector** (radio/dropdown: Speichern | Zwischenablage |
+  Speichern & öffnen) controls what the direct **"In Markdown umwandeln"** entry
+  does. Default: Speichern.
+- **Speichern**: diff selection against registry → add/remove keys accordingly,
+  and re-register the direct entry's command with the chosen default action.
 - Buttons: **markitdown prüfen / installieren** (calls Runtime guard),
   **Deinstallieren** (removes all keys + files).
 
 ## Configuration Data
 
-- **Registry is the source of truth** for which extensions are enabled.
+- **Registry is the source of truth** for which extensions are enabled and for
+  the direct entry's default action (encoded in the `MarkItDown` command line).
 - `config/filetypes.default.json` is the catalog the GUI offers (friendly name +
   extension), shipped as defaults; it is read-only reference, not live state.
 - Install directory: `%LOCALAPPDATA%\MarkItDownMenu` (files, queue, logs).
