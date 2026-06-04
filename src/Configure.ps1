@@ -26,6 +26,16 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = T 'gui.title'
 $form.Size = New-Object System.Drawing.Size(460, 560)
 $form.StartPosition = 'CenterScreen'
+$form.ShowInTaskbar = $true
+# Launched from a hidden background process (wscript -> pwsh), the window would
+# otherwise open behind Explorer without focus. Force it to the foreground.
+$form.Add_Shown({
+    $form.WindowState = 'Normal'
+    $form.TopMost = $true
+    $form.Activate()
+    $form.BringToFront()
+    $form.TopMost = $false
+})
 
 $lbl = New-Object System.Windows.Forms.Label
 $lbl.Text = T 'gui.filetypes'; $lbl.Location = '12,10'; $lbl.AutoSize = $true
