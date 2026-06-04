@@ -14,6 +14,8 @@ install and use, and configurable as to which file types show the menu.
 ## Goals
 
 - One-step, no-admin install that another person can run by double-clicking.
+- Detect whether a supported Python version is installed; if missing or too old,
+  offer to install Python.
 - Detect whether `markitdown` is installed; if not, offer to install it.
 - A checkbox GUI to choose which file types trigger the menu.
 - Developed on Windows 10, compatible with Windows 11.
@@ -29,13 +31,19 @@ install and use, and configurable as to which file types show the menu.
 
 ## Runtime / Dependency Strategy
 
-- **Python assumed present.** Everything except `markitdown` itself uses Windows
-  built-ins: PowerShell, WinForms, WinRT toasts, the registry. No extra pip
+- **Windows built-ins only for the tool itself.** Everything except `markitdown`
+  uses PowerShell, WinForms, WinRT toasts, and the registry. No extra pip
   packages are required for the menu, GUI, toast, or batching.
-- **markitdown on demand.** On first conversion (and via a GUI button) the
-  runtime guard checks for `python` and the `markitdown` module. If `markitdown`
-  is missing, a dialog asks to install it (`pip install markitdown[all]`). If
-  `python` itself is missing, a toast/dialog explains that Python is required.
+- **Python checked, with version gate.** `markitdown` requires Python **>= 3.10**.
+  On first conversion (and via a GUI button) the runtime guard:
+  1. Looks for a usable `python` and reads its version.
+  2. If Python is **missing or older than 3.10**, a dialog offers to install a
+     current Python — preferring `winget install --id Python.Python.3.12`
+     (per-user, no admin), falling back to opening the python.org download page
+     if `winget` is unavailable.
+- **markitdown on demand.** Once a supported Python is present, the guard checks
+  for the `markitdown` module. If missing, a dialog asks to install it
+  (`pip install markitdown[all]`). Result is cached.
 
 ## Windows 11 Compatibility (Hybrid)
 
@@ -67,7 +75,7 @@ Explorer right-click
 | `src/HiddenLaunch.vbs` | Launch `Launcher.ps1` with a hidden window (no flicker) | wscript |
 | `src/Launcher.ps1` | Parse `<mode> <path>` args; run aggregator → guard → converter → toast | all modules |
 | `src/modules/Converter.psm1` | `Convert-Item -Path -Mode (save\|clip\|open)`; single file → `x.md` beside source; folder → recurse over configured extensions | markitdown CLI |
-| `src/modules/Runtime.psm1` | `Test-MarkItDown` / `Install-MarkItDown`; checks `python` + `markitdown`, offers `pip install markitdown[all]`; caches result | python, pip |
+| `src/modules/Runtime.psm1` | `Test-Python` (version >= 3.10) / `Install-Python` (winget, fallback python.org); `Test-MarkItDown` / `Install-MarkItDown` (`pip install markitdown[all]`); caches result | python, winget, pip |
 | `src/modules/Toast.psm1` | `Show-Toast -Title -Message [-Error]` via WinRT `Windows.UI.Notifications`; MessageBox fallback | WinRT |
 | `src/modules/Registry.psm1` | Add/remove the cascading submenu per extension and for folders | registry |
 | `src/modules/Config.psm1` | Read/write the active file-type selection (registry is source of truth); load type catalog from `config/filetypes.default.json` | Registry.psm1 |
@@ -140,7 +148,8 @@ windows / N toasts:
 ## Error Handling & Feedback
 
 - All user feedback is via **toast** (success summary / error). Errors include:
-  python missing, markitdown missing (with install offer), per-file conversion
+  Python missing/too old (with install offer), markitdown missing (with install
+  offer), per-file conversion
   failure (batch toast reports counts: "8/10 konvertiert, 2 Fehler").
 - A rolling log file in the install dir captures details for troubleshooting.
 
