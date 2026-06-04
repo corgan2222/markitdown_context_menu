@@ -24,7 +24,7 @@ $icons       = Get-IconSet -ImagesDir (Join-Path $appRoot 'images') -Dark:(Test-
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = T 'gui.title'
-$form.Size = New-Object System.Drawing.Size(460, 720)
+$form.Size = New-Object System.Drawing.Size(460, 760)
 $form.StartPosition = 'CenterScreen'
 $form.ShowInTaskbar = $true
 # Launched from a hidden background process (wscript -> pwsh), the window would
@@ -75,10 +75,12 @@ $cmbLang.Items.AddRange(@($langMap.Keys)); $cmbLang.SelectedIndex = @($langMap.V
 $form.Controls.AddRange(@($lblLang, $cmbLang))
 
 # runtime versions + update check
+$repoUrl = 'https://github.com/corgan2222/markitdown_context_menu'
+
 $lblVerHdr = New-Object System.Windows.Forms.Label; $lblVerHdr.Text = T 'gui.versionsHeader'; $lblVerHdr.Location = '12,404'; $lblVerHdr.AutoSize = $true
 $lblTool = New-Object System.Windows.Forms.Label; $lblTool.Location = '24,424'; $lblTool.AutoSize = $true
-$lblPy = New-Object System.Windows.Forms.Label; $lblPy.Location = '24,442'; $lblPy.AutoSize = $true
-$lblMd = New-Object System.Windows.Forms.Label; $lblMd.Location = '24,460'; $lblMd.AutoSize = $true
+$lblPy = New-Object System.Windows.Forms.Label; $lblPy.Location = '24,444'; $lblPy.AutoSize = $true
+$lblMd = New-Object System.Windows.Forms.Label; $lblMd.Location = '24,464'; $lblMd.AutoSize = $true
 
 $toolVer = Get-ToolVersion -Path (Join-Path $appRoot 'VERSION')
 $pyVer   = Get-PythonVersion
@@ -87,13 +89,16 @@ $lblTool.Text = ((T 'gui.toolVersion')      -f $(if ($toolVer) { $toolVer }     
 $lblPy.Text   = ((T 'gui.pythonVersion')    -f $(if ($pyVer)   { $pyVer.ToString() }   else { T 'gui.notInstalled' }))
 $lblMd.Text   = ((T 'gui.markitdownVersion') -f $(if ($mdVer)  { $mdVer }              else { T 'gui.notInstalled' }))
 
-$btnCheckUpdate = New-Object System.Windows.Forms.Button; $btnCheckUpdate.Text = T 'gui.checkUpdates'; $btnCheckUpdate.Location = '12,486'; $btnCheckUpdate.Size = '200,28'
-$btnUpdateMd = New-Object System.Windows.Forms.Button; $btnUpdateMd.Text = T 'gui.updateMarkitdown'; $btnUpdateMd.Location = '232,486'; $btnUpdateMd.Size = '200,28'; $btnUpdateMd.Enabled = $false
-$lblToolUpd = New-Object System.Windows.Forms.Label; $lblToolUpd.Location = '12,518'; $lblToolUpd.AutoSize = $true; $lblToolUpd.MaximumSize = '420,0'
-$lblUpd = New-Object System.Windows.Forms.Label; $lblUpd.Location = '12,540'; $lblUpd.AutoSize = $true; $lblUpd.MaximumSize = '420,0'
+$btnCheckUpdate = New-Object System.Windows.Forms.Button; $btnCheckUpdate.Text = T 'gui.checkUpdates'; $btnCheckUpdate.Location = '12,490'; $btnCheckUpdate.Size = '200,28'
+$btnUpdateMd = New-Object System.Windows.Forms.Button; $btnUpdateMd.Text = T 'gui.updateMarkitdown'; $btnUpdateMd.Location = '232,490'; $btnUpdateMd.Size = '200,28'; $btnUpdateMd.Enabled = $false
+$lblToolUpd = New-Object System.Windows.Forms.Label; $lblToolUpd.Location = '12,524'; $lblToolUpd.AutoSize = $true; $lblToolUpd.MaximumSize = '420,0'
+$btnToolDownload = New-Object System.Windows.Forms.Button; $btnToolDownload.Text = T 'gui.downloadUpdate'; $btnToolDownload.Location = '12,546'; $btnToolDownload.Size = '240,26'; $btnToolDownload.Visible = $false
+$lblUpd = New-Object System.Windows.Forms.Label; $lblUpd.Location = '12,580'; $lblUpd.AutoSize = $true; $lblUpd.MaximumSize = '420,0'
+
+$btnToolDownload.Add_Click({ Start-Process "$repoUrl/releases/latest" })
 
 $btnCheckUpdate.Add_Click({
-    $lblToolUpd.Text = T 'gui.checking'; $lblUpd.Text = ''; $form.Refresh()
+    $lblToolUpd.Text = T 'gui.checking'; $btnToolDownload.Visible = $false; $lblUpd.Text = ''; $form.Refresh()
 
     # tool itself (GitHub releases)
     if ($toolVer) {
@@ -102,6 +107,7 @@ $btnCheckUpdate.Add_Click({
             $lblToolUpd.Text = T 'gui.updateCheckFailed'
         } elseif (Test-UpdateAvailable -Installed $toolVer -Latest $latestTool) {
             $lblToolUpd.Text = ((T 'gui.toolUpdateAvailable') -f $toolVer, $latestTool)
+            $btnToolDownload.Visible = $true
         } else {
             $lblToolUpd.Text = ((T 'gui.toolUpToDate') -f $toolVer)
         }
@@ -131,15 +137,15 @@ $btnUpdateMd.Add_Click({
         $lblUpd.Text = T 'gui.updateFailed'; $btnUpdateMd.Enabled = $true
     }
 })
-$form.Controls.AddRange(@($lblVerHdr, $lblTool, $lblPy, $lblMd, $btnCheckUpdate, $btnUpdateMd, $lblToolUpd, $lblUpd))
+$form.Controls.AddRange(@($lblVerHdr, $lblTool, $lblPy, $lblMd, $btnCheckUpdate, $btnUpdateMd, $lblToolUpd, $btnToolDownload, $lblUpd))
 
 # buttons
-$btnRuntime = New-Object System.Windows.Forms.Button; $btnRuntime.Text = T 'gui.checkRuntime'; $btnRuntime.Location = '12,572'; $btnRuntime.Size = '420,30'
+$btnRuntime = New-Object System.Windows.Forms.Button; $btnRuntime.Text = T 'gui.checkRuntime'; $btnRuntime.Location = '12,612'; $btnRuntime.Size = '420,30'
 $btnRuntime.Add_Click({ if (Confirm-Runtime -Strings $S) { [System.Windows.Forms.MessageBox]::Show((T 'gui.runtimeOk')) | Out-Null } })
 $form.Controls.Add($btnRuntime)
 
-$btnSave = New-Object System.Windows.Forms.Button; $btnSave.Text = T 'gui.save'; $btnSave.Location = '12,610'; $btnSave.Size = '200,34'
-$btnUninstall = New-Object System.Windows.Forms.Button; $btnUninstall.Text = T 'gui.uninstall'; $btnUninstall.Location = '232,610'; $btnUninstall.Size = '200,34'
+$btnSave = New-Object System.Windows.Forms.Button; $btnSave.Text = T 'gui.save'; $btnSave.Location = '12,652'; $btnSave.Size = '200,34'
+$btnUninstall = New-Object System.Windows.Forms.Button; $btnUninstall.Text = T 'gui.uninstall'; $btnUninstall.Location = '232,652'; $btnUninstall.Size = '200,34'
 
 $btnSave.Add_Click({
     $desired = @()

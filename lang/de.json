@@ -29,6 +29,7 @@
   "gui.toolVersion": "Tool: v{0}",
   "gui.toolUpToDate": "Tool ist aktuell (v{0}).",
   "gui.toolUpdateAvailable": "Tool-Update verfügbar: v{0} → v{1} (auf GitHub).",
+  "gui.downloadUpdate": "Update herunterladen (GitHub)",
   "gui.pythonVersion": "Python: {0}",
   "gui.markitdownVersion": "markitdown: {0}",
   "gui.notInstalled": "nicht installiert",
