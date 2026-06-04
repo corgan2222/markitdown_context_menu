@@ -15,7 +15,7 @@ function Get-LauncherArgs {
 function Invoke-Launcher {
     param([string]$Mode, [string]$Path)
 
-    $here = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $here = $PSScriptRoot
     $modules = Join-Path $here 'modules'
     foreach ($m in 'Paths','Config','I18n','Converter','Runtime','Registry','Toast','Batch') {
         Import-Module (Join-Path $modules "$m.psm1") -Force
