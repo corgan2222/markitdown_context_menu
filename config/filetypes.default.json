@@ -1,0 +1,17 @@
+[
+  { "extension": ".pdf",  "name": "PDF" },
+  { "extension": ".docx", "name": "Word (.docx)" },
+  { "extension": ".doc",  "name": "Word (.doc)" },
+  { "extension": ".xlsx", "name": "Excel (.xlsx)" },
+  { "extension": ".pptx", "name": "PowerPoint (.pptx)" },
+  { "extension": ".png",  "name": "PNG image" },
+  { "extension": ".jpg",  "name": "JPEG image" },
+  { "extension": ".jpeg", "name": "JPEG image" },
+  { "extension": ".html", "name": "HTML" },
+  { "extension": ".htm",  "name": "HTML" },
+  { "extension": ".csv",  "name": "CSV" },
+  { "extension": ".json", "name": "JSON" },
+  { "extension": ".xml",  "name": "XML" },
+  { "extension": ".txt",  "name": "Text" },
+  { "extension": ".epub", "name": "EPUB" }
+]
