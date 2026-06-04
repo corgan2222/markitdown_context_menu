@@ -22,5 +22,6 @@
   "gui.uninstall": "Deinstallieren",
   "gui.checkRuntime": "markitdown prüfen / installieren",
   "gui.saved": "Einstellungen gespeichert.",
+  "gui.uninstalled": "Entfernt. Die Kontextmenü-Einträge sind weg.",
   "gui.runtimeOk": "Python und markitdown sind bereit."
 }

@@ -96,7 +96,7 @@ $btnSave.Add_Click({
 $btnUninstall.Add_Click({
     foreach ($e in @(Get-RegisteredExtensions)) { Unregister-MenuForExtension -Extension $e }
     Unregister-MenuForFolder
-    [System.Windows.Forms.MessageBox]::Show((T 'gui.saved')) | Out-Null
+    [System.Windows.Forms.MessageBox]::Show((T 'gui.uninstalled')) | Out-Null
     $form.Close()
 })
 $form.Controls.AddRange(@($btnSave, $btnUninstall))

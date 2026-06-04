@@ -17,7 +17,7 @@ function Invoke-Launcher {
 
     $here = Split-Path -Parent $MyInvocation.MyCommand.Path
     $modules = Join-Path $here 'modules'
-    foreach ($m in 'Paths','Config','I18n','Converter','Runtime','Toast','Batch') {
+    foreach ($m in 'Paths','Config','I18n','Converter','Runtime','Registry','Toast','Batch') {
         Import-Module (Join-Path $modules "$m.psm1") -Force
     }
     $appRoot = Split-Path -Parent $here
@@ -42,6 +42,11 @@ function Invoke-Launcher {
     $results = Convert-Files -Files @($files) -Mode $Mode
     $ok   = @($results | Where-Object Success).Count
     $fail = @($results | Where-Object { -not $_.Success }).Count
+
+    $log = Get-LogPath
+    foreach ($r in @($results | Where-Object { -not $_.Success })) {
+        Add-Content -Path $log -Value ("{0}`t{1}`t{2}" -f (Get-Date -Format s), $r.Path, $r.Error) -Encoding utf8
+    }
     if ($fail -eq 0) {
         Show-Toast -Title (Get-String 'toast.title' $strings) -Message ((Get-String 'toast.done' $strings) -f $ok)
     } else {

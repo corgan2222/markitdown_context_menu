@@ -1,6 +1,6 @@
 function Invoke-WithMutex {
     param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][scriptblock]$Action)
-    $mutex = New-Object System.Threading.Mutex($false, "Global\$Name")
+    $mutex = New-Object System.Threading.Mutex($false, "Local\$Name")
     [void]$mutex.WaitOne()
     try { & $Action } finally { $mutex.ReleaseMutex(); $mutex.Dispose() }
 }

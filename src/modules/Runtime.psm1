@@ -24,7 +24,7 @@ function Get-PythonVersion {
 
 function Test-MarkItDownInstalled {
     try {
-        & python -m markitdown --help *> $null
+        & python -c "import markitdown" *> $null
         return ($LASTEXITCODE -eq 0)
     } catch { return $false }
 }
