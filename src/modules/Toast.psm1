@@ -1,19 +1,40 @@
+# src/modules/Toast.psm1
+# Non-blocking Windows notification.
+#
+# Note: the WinRT toast API (Windows.UI.Notifications) is NOT available in
+# PowerShell 7 (pwsh) — the launcher runs under pwsh, so it always threw and
+# fell back to a modal MessageBox the user had to click away. We use a tray
+# balloon instead: on Windows 10/11 it surfaces as a real notification in the
+# Action Center, is non-blocking, and dismisses itself.
+
 function Show-Toast {
-    param([Parameter(Mandatory)][string]$Title, [Parameter(Mandatory)][string]$Message, [switch]$Error)
+    param(
+        [Parameter(Mandatory)][string]$Title,
+        [Parameter(Mandatory)][string]$Message,
+        [switch]$Error
+    )
     try {
-        $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
-        $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
-        $texts = $template.GetElementsByTagName('text')
-        $texts.Item(0).AppendChild($template.CreateTextNode($Title)) | Out-Null
-        $texts.Item(1).AppendChild($template.CreateTextNode($Message)) | Out-Null
-        $toast = [Windows.UI.Notifications.ToastNotification]::new($template)
-        $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('MarkItDown.ContextMenu')
-        $notifier.Show($toast)
+        Add-Type -AssemblyName System.Windows.Forms
+        Add-Type -AssemblyName System.Drawing
+        $tipIcon = if ($Error) { [System.Windows.Forms.ToolTipIcon]::Error } else { [System.Windows.Forms.ToolTipIcon]::Info }
+        $sysIcon = if ($Error) { [System.Drawing.SystemIcons]::Error }      else { [System.Drawing.SystemIcons]::Information }
+
+        $ni = New-Object System.Windows.Forms.NotifyIcon
+        $ni.Icon    = $sysIcon
+        $ni.Visible = $true
+        $ni.ShowBalloonTip(5000, $Title, $Message, $tipIcon)
+
+        # Keep the icon alive long enough for Windows to render the balloon,
+        # then clean up. Non-blocking for the user (the launcher runs hidden).
+        Start-Sleep -Milliseconds 5000
+        $ni.Dispose()
     }
     catch {
-        Add-Type -AssemblyName System.Windows.Forms
-        $icon = if ($Error) { 'Error' } else { 'Information' }
-        [System.Windows.Forms.MessageBox]::Show($Message, $Title, 'OK', $icon) | Out-Null
+        # Never pop a modal dialog: just log. The conversion already happened.
+        try {
+            $log = Join-Path $env:LOCALAPPDATA 'MarkItDownMenu\toast-error.log'
+            Add-Content -Path $log -Value ("{0}`t{1}`t{2}" -f (Get-Date -Format s), $Title, $_.Exception.Message) -Encoding utf8
+        } catch { }
     }
 }
 
