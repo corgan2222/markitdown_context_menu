@@ -18,6 +18,8 @@ install and use, and configurable as to which file types show the menu.
   offer to install Python.
 - Detect whether `markitdown` is installed; if not, offer to install it.
 - A checkbox GUI to choose which file types trigger the menu.
+- **Multilingual** via language files (at least German and English), auto-
+  selecting the Windows system language.
 - Developed on Windows 10, compatible with Windows 11.
 
 ## Non-Goals (v1)
@@ -79,7 +81,8 @@ Explorer right-click
 | `src/modules/Toast.psm1` | `Show-Toast -Title -Message [-Error]` via WinRT `Windows.UI.Notifications`; MessageBox fallback | WinRT |
 | `src/modules/Registry.psm1` | Add/remove the cascading submenu per extension and for folders | registry |
 | `src/modules/Config.psm1` | Read/write the active file-type selection (registry is source of truth); load type catalog from `config/filetypes.default.json` | Registry.psm1 |
-| `src/Configure.ps1` | WinForms checkbox GUI; install/repair, uninstall, markitdown check/install buttons | Registry, Config, Runtime |
+| `src/modules/I18n.psm1` | `Get-String -Key`; resolves the active language (explicit setting → system UI language → English fallback); loads `lang/<code>.json` | lang files |
+| `src/Configure.ps1` | WinForms checkbox GUI; install/repair, uninstall, markitdown check/install buttons; language selector | Registry, Config, Runtime, I18n |
 
 ## Menu Structure
 
@@ -95,6 +98,23 @@ Two top-level context-menu entries are registered:
    - **Speichern & öffnen** — write `.md` and open it in the default editor.
 
 Both entries are registered for single files, multi-selection, and folders.
+
+(The menu labels above are illustrative; actual text comes from the active
+language file — see Localization.)
+
+## Localization
+
+- All user-facing strings (menu labels, GUI text, dialogs, toasts) live in
+  language files: `lang/de.json` and `lang/en.json` ship by default; adding
+  another locale is just another `lang/<code>.json`.
+- **Active language resolution** (`I18n.psm1`): explicit GUI setting → Windows
+  system UI language (`Get-UICulture`, e.g. `de-DE` → `de`) → English fallback.
+  Unknown locales fall back to English.
+- **Menu labels are localized at registration time.** Registry context-menu
+  labels are static strings, so `Registry.psm1` writes the strings for the
+  active language when registering. Changing the language in the GUI re-writes
+  the menu labels.
+- GUI, dialog, and toast text are resolved live via `Get-String`.
 
 ## Registry Layout (per-user, HKCU)
 
@@ -137,13 +157,18 @@ windows / N toasts:
   does. Default: Speichern.
 - **Speichern**: diff selection against registry → add/remove keys accordingly,
   and re-register the direct entry's command with the chosen default action.
+- A **language selector** (Auto = system | Deutsch | English) sets the active
+  language; changing it re-writes the localized menu labels.
 - Buttons: **markitdown prüfen / installieren** (calls Runtime guard),
   **Deinstallieren** (removes all keys + files).
+- All GUI text itself is resolved via `I18n.psm1`.
 
 ## Configuration Data
 
 - **Registry is the source of truth** for which extensions are enabled and for
   the direct entry's default action (encoded in the `MarkItDown` command line).
+- The **selected language** (Auto/de/en) is persisted in the install dir (small
+  settings file); "Auto" means resolve from the system UI language at runtime.
 - `config/filetypes.default.json` is the catalog the GUI offers (friendly name +
   extension), shipped as defaults; it is read-only reference, not live state.
 - Install directory: `%LOCALAPPDATA%\MarkItDownMenu` (files, queue, logs).
@@ -152,7 +177,8 @@ windows / N toasts:
 
 - `install.cmd` (double-click) → runs `install.ps1` with
   `-ExecutionPolicy Bypass`.
-- `install.ps1`: copies `src/` + `config/` to `%LOCALAPPDATA%\MarkItDownMenu`,
+- `install.ps1`: copies `src/` + `config/` + `lang/` to
+  `%LOCALAPPDATA%\MarkItDownMenu`,
   registers a default set of extensions, creates a Start-menu shortcut to the
   configuration GUI. No admin required.
 - `uninstall.ps1`: removes all `MarkItDown` registry keys (all extensions +
@@ -173,6 +199,8 @@ windows / N toasts:
     configured extensions; `markitdown` invocation mocked.
   - `Registry`: add → read → remove roundtrip in a throwaway HKCU subtree.
   - `Config`: catalog parsing; selection diff logic.
+  - `I18n`: language resolution (explicit → system → English fallback); every
+    key present in all shipped `lang/*.json` files (no missing translations).
 - Manual smoke test: install → right-click each selection type → verify submenu,
   conversion output, and toast on Windows 10 (and Win11 under "more options").
 
