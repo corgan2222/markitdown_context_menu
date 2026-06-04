@@ -9,7 +9,7 @@ Import-Module (Join-Path $src 'src/modules/Registry.psm1') -Force
 
 $dest = Get-InstallDir
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
-foreach ($d in 'src','config','lang') {
+foreach ($d in 'src','config','lang','images') {
     Copy-Item -Path (Join-Path $src $d) -Destination $dest -Recurse -Force
 }
 
@@ -18,10 +18,11 @@ $code   = Resolve-Language -Setting $settings.Language -Available @('de','en')
 $S      = Import-Language -LangDir (Join-Path $dest 'lang') -Code $code
 $labels = @{ direct=$S['menu.direct']; options=$S['menu.options']; save=$S['menu.save']; clip=$S['menu.clip']; open=$S['menu.open'] }
 $launcherCmd = 'wscript "' + (Join-Path $dest 'src\HiddenLaunch.vbs') + '"'
+$iconPath    = Join-Path $dest 'images\markdown-icon.ico'
 
 $defaults = '.pdf','.docx','.xlsx','.pptx','.png','.jpg','.html','.csv'
-foreach ($e in $defaults) { Register-MenuForExtension -Extension $e -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd }
-Register-MenuForFolder -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd
+foreach ($e in $defaults) { Register-MenuForExtension -Extension $e -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath }
+Register-MenuForFolder -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath
 
 # Start-menu shortcut to the GUI
 $lnkDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'

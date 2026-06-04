@@ -19,6 +19,7 @@ $current  = @(Get-RegisteredExtensions)
 
 # launcher command embedded into every registry verb
 $launcherCmd = 'wscript "' + (Join-Path $appRoot 'src\HiddenLaunch.vbs') + '"'
+$iconPath    = Join-Path $appRoot 'images\markdown-icon.ico'
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = T 'gui.title'
@@ -88,8 +89,8 @@ $btnSave.Add_Click({
 
     $diff = Get-SelectionDiff -Desired $desired -Current @(Get-RegisteredExtensions)
     foreach ($e in $diff.ToRemove) { Unregister-MenuForExtension -Extension $e }
-    foreach ($e in $desired)       { Register-MenuForExtension -Extension $e -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd }
-    Register-MenuForFolder -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd
+    foreach ($e in $desired)       { Register-MenuForExtension -Extension $e -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath }
+    Register-MenuForFolder -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath
     [System.Windows.Forms.MessageBox]::Show((T 'gui.saved')) | Out-Null
 })
 

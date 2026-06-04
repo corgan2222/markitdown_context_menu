@@ -22,6 +22,24 @@ Describe 'Extension menu roundtrip' {
         Unregister-MenuForExtension -Extension '.pdf' -ClassesRoot $script:root
         Get-RegisteredExtensions -ClassesRoot $script:root | Should -Not -Contain '.pdf'
     }
+
+    It 'writes the Icon value on every verb when IconPath is given' {
+        $labels = @{ direct='Convert'; options='Convert (Options)'; save='Save'; clip='Clip'; open='Open' }
+        $icon = 'C:\path\markdown-icon.ico'
+        Register-MenuForExtension -Extension '.pdf' -DefaultMode 'save' -Labels $labels -LauncherCommand 'wscript x.vbs' -IconPath $icon -ClassesRoot $script:root
+        $shell = "$script:root\SystemFileAssociations\.pdf\shell"
+        (Get-ItemProperty "$shell\MarkItDown").Icon | Should -Be $icon
+        (Get-ItemProperty "$shell\MarkItDownOptions").Icon | Should -Be $icon
+        (Get-ItemProperty "$shell\MarkItDownOptions\shell\01_save").Icon | Should -Be $icon
+        Unregister-MenuForExtension -Extension '.pdf' -ClassesRoot $script:root
+    }
+
+    It 'omits the Icon value when no IconPath is given' {
+        $labels = @{ direct='Convert'; options='Convert (Options)'; save='Save'; clip='Clip'; open='Open' }
+        Register-MenuForExtension -Extension '.pdf' -DefaultMode 'save' -Labels $labels -LauncherCommand 'wscript x.vbs' -ClassesRoot $script:root
+        (Get-ItemProperty "$script:root\SystemFileAssociations\.pdf\shell\MarkItDown").PSObject.Properties.Name | Should -Not -Contain 'Icon'
+        Unregister-MenuForExtension -Extension '.pdf' -ClassesRoot $script:root
+    }
 }
 
 Describe 'Folder menu roundtrip' {
