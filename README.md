@@ -10,6 +10,12 @@ the Explorer right-click menu so a conversion is one click away.
 
 **Target OS:** Windows 10 and Windows 11.
 
+## Screenshots
+
+| Context menu | Settings |
+|---|---|
+| ![Context menu](doc/context_menu.png) | ![Settings](doc/settings.png) |
+
 ## Features
 
 - Convert a single file, a multi-file selection, or a whole folder (recursive).
