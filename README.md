@@ -53,6 +53,17 @@ Open **"MarkItDown Context Menu"** from the Start menu to pick which file types
 show the menu, set the direct-entry action, and choose the language
 (Auto / Deutsch / English).
 
+## Update
+
+Download the latest release, unzip, and run **`install.cmd`** again — no need to
+uninstall first. The installer overwrites the program files and keeps your
+`settings.json` (file types, language, default action). The current version is
+shown under **Installed versions** in the settings window; **Check for updates**
+compares it with the latest GitHub release and shows a download button when a
+newer one exists.
+
+For a fully clean update, uninstall first, then install.
+
 ## Uninstall
 
 Run `uninstall.ps1`, or use the **Uninstall** button in the settings window.
