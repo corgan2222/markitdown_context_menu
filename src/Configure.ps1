@@ -1,5 +1,13 @@
 # src/Configure.ps1
 #Requires -Version 7.0
+
+# Single-instance guard: with several files selected, the shell invokes the
+# settings verb once per selected file. Hold a named mutex so only the first
+# launch opens a window; later ones exit immediately. Kept in a script-scoped
+# variable so it lives for the whole process and releases on exit.
+$script:settingsMutex = New-Object System.Threading.Mutex($false, 'Local\MarkItDownMenu.Settings')
+if (-not $script:settingsMutex.WaitOne(0)) { return }
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
