@@ -3,3 +3,5 @@
 queue.txt
 settings.json
 .code-review-graph/
+.claude/
+test_files/
