@@ -23,3 +23,29 @@ Describe 'Test-PythonVersion' {
         Test-PythonVersion -Version $null -Minimum ([version]'3.10') | Should -BeFalse
     }
 }
+
+Describe 'Test-UpdateAvailable' {
+    It 'true when latest release is numerically higher' {
+        Test-UpdateAvailable -Installed '0.1.1' -Latest '0.1.2' | Should -BeTrue
+        Test-UpdateAvailable -Installed '0.1.1' -Latest '0.2.0' | Should -BeTrue
+        Test-UpdateAvailable -Installed '0.9.0' -Latest '1.0.0' | Should -BeTrue
+    }
+    It 'false when versions are equal' {
+        Test-UpdateAvailable -Installed '0.1.1' -Latest '0.1.1' | Should -BeFalse
+    }
+    It 'false when installed is newer than latest' {
+        Test-UpdateAvailable -Installed '0.2.0' -Latest '0.1.9' | Should -BeFalse
+    }
+    It 'handles differing segment counts' {
+        Test-UpdateAvailable -Installed '0.1' -Latest '0.1.1' | Should -BeTrue
+        Test-UpdateAvailable -Installed '0.1.0' -Latest '0.1'   | Should -BeFalse
+    }
+    It 'treats an installed prerelease as older than the same numeric final release' {
+        Test-UpdateAvailable -Installed '0.0.1a2' -Latest '0.0.1' | Should -BeTrue
+    }
+    It 'false when either version is missing' {
+        Test-UpdateAvailable -Installed ''       -Latest '0.1.0' | Should -BeFalse
+        Test-UpdateAvailable -Installed '0.1.0'  -Latest ''      | Should -BeFalse
+        Test-UpdateAvailable -Installed $null    -Latest $null   | Should -BeFalse
+    }
+}

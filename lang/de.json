@@ -24,5 +24,18 @@
   "gui.checkRuntime": "markitdown prüfen / installieren",
   "gui.saved": "Einstellungen gespeichert.",
   "gui.uninstalled": "Entfernt. Die Kontextmenü-Einträge sind weg.",
-  "gui.runtimeOk": "Python und markitdown sind bereit."
+  "gui.runtimeOk": "Python und markitdown sind bereit.",
+  "gui.versionsHeader": "Installierte Versionen:",
+  "gui.pythonVersion": "Python: {0}",
+  "gui.markitdownVersion": "markitdown: {0}",
+  "gui.notInstalled": "nicht installiert",
+  "gui.checkUpdates": "Auf Updates prüfen",
+  "gui.updateMarkitdown": "markitdown aktualisieren",
+  "gui.checking": "Prüfe PyPI…",
+  "gui.upToDate": "markitdown ist aktuell ({0}).",
+  "gui.updateAvailable": "Update verfügbar: {0} → {1}",
+  "gui.updateCheckFailed": "Update-Prüfung fehlgeschlagen (offline?).",
+  "gui.updating": "Aktualisiere…",
+  "gui.updated": "markitdown auf {0} aktualisiert.",
+  "gui.updateFailed": "Aktualisierung fehlgeschlagen."
 }

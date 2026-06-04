@@ -29,6 +29,55 @@ function Test-MarkItDownInstalled {
     } catch { return $false }
 }
 
+function Get-MarkItDownVersion {
+    try {
+        $out = & python -c "import importlib.metadata as m; print(m.version('markitdown'))" 2>$null
+        if ($LASTEXITCODE -eq 0 -and $out) { return (@($out)[0]).Trim() }
+        return $null
+    } catch { return $null }
+}
+
+function Get-LatestMarkItDownVersion {
+    param([int]$TimeoutSec = 8)
+    try {
+        $r = Invoke-RestMethod -Uri 'https://pypi.org/pypi/markitdown/json' -TimeoutSec $TimeoutSec -ErrorAction Stop
+        return $r.info.version
+    } catch { return $null }
+}
+
+# Pure comparison: is $Latest a newer release than $Installed?
+function Test-UpdateAvailable {
+    param([string]$Installed, [string]$Latest)
+    if ([string]::IsNullOrWhiteSpace($Installed) -or [string]::IsNullOrWhiteSpace($Latest)) { return $false }
+    if ($Installed -eq $Latest) { return $false }
+
+    $toNums = {
+        param([string]$v)
+        $m = [regex]::Match($v, '^\d+(\.\d+)*')
+        if (-not $m.Success) { return @() }
+        return @($m.Value.Split('.') | ForEach-Object { [int]$_ })
+    }
+    $a = & $toNums $Installed
+    $b = & $toNums $Latest
+    $len = [Math]::Max($a.Count, $b.Count)
+    for ($i = 0; $i -lt $len; $i++) {
+        $x = if ($i -lt $a.Count) { $a[$i] } else { 0 }
+        $y = if ($i -lt $b.Count) { $b[$i] } else { 0 }
+        if ($y -gt $x) { return $true }
+        if ($y -lt $x) { return $false }
+    }
+    # Numeric release equal: an installed prerelease (e.g. 0.0.1a2) is older than the final (0.0.1)
+    $instPre = $Installed -match '[A-Za-z]'
+    $latePre = $Latest    -match '[A-Za-z]'
+    if ($instPre -and -not $latePre) { return $true }
+    return $false
+}
+
+function Update-MarkItDown {
+    & python -m pip install --user --upgrade "markitdown[all]"
+    return ($LASTEXITCODE -eq 0)
+}
+
 function Install-Python {
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         winget install --id Python.Python.3.12 --scope user --silent --accept-package-agreements --accept-source-agreements
@@ -64,4 +113,4 @@ function Confirm-Runtime {
     return $true
 }
 
-Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Install-Python, Install-MarkItDown, Confirm-Runtime
+Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Get-MarkItDownVersion, Get-LatestMarkItDownVersion, Test-UpdateAvailable, Update-MarkItDown, Install-Python, Install-MarkItDown, Confirm-Runtime
