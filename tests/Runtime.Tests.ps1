@@ -24,6 +24,25 @@ Describe 'Test-PythonVersion' {
     }
 }
 
+Describe 'Get-ToolVersion' {
+    It 'reads and trims a version from a VERSION file' {
+        $f = Join-Path $TestDrive 'VERSION'
+        Set-Content -LiteralPath $f -Value "  1.2.3 `r`n" -NoNewline
+        Get-ToolVersion -Path $f | Should -Be '1.2.3'
+    }
+    It 'returns $null when the file does not exist' {
+        Get-ToolVersion -Path (Join-Path $TestDrive 'nope.txt') | Should -Be $null
+    }
+    It 'returns $null for an empty file' {
+        $f = Join-Path $TestDrive 'EMPTY'
+        Set-Content -LiteralPath $f -Value '' -NoNewline
+        Get-ToolVersion -Path $f | Should -Be $null
+    }
+    It 'returns $null when no path is given' {
+        Get-ToolVersion -Path '' | Should -Be $null
+    }
+}
+
 Describe 'Test-UpdateAvailable' {
     It 'true when latest release is numerically higher' {
         Test-UpdateAvailable -Installed '0.1.1' -Latest '0.1.2' | Should -BeTrue

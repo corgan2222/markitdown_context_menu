@@ -13,6 +13,9 @@ New-Item -ItemType Directory -Path $dest -Force | Out-Null
 foreach ($d in 'src','config','lang','images') {
     Copy-Item -Path (Join-Path $src $d) -Destination $dest -Recurse -Force
 }
+# bundle the tool version so the settings GUI can show it offline
+$versionFile = Join-Path $src 'VERSION'
+if (Test-Path -LiteralPath $versionFile) { Copy-Item -Path $versionFile -Destination $dest -Force }
 
 $settings = Get-Settings -Path (Get-SettingsPath)
 $code   = Resolve-Language -Setting $settings.Language -Available @('de','en')

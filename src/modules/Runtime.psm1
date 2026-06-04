@@ -45,6 +45,34 @@ function Get-LatestMarkItDownVersion {
     } catch { return $null }
 }
 
+# This tool's own version. Bundled at install time as a plain-text VERSION file
+# in the application root; kept in sync with the latest GitHub release tag.
+function Get-ToolVersion {
+    param([string]$Path)
+    try {
+        if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return $null }
+        $v = (Get-Content -LiteralPath $Path -Raw -ErrorAction Stop).Trim()
+        if ([string]::IsNullOrWhiteSpace($v)) { return $null }
+        return $v
+    } catch { return $null }
+}
+
+# Latest published release tag from GitHub (e.g. 'v0.2.0' -> '0.2.0').
+function Get-LatestToolVersion {
+    param(
+        [string]$Repo = 'corgan2222/markitdown_context_menu',
+        [int]$TimeoutSec = 8
+    )
+    try {
+        $uri = "https://api.github.com/repos/$Repo/releases/latest"
+        $headers = @{ 'User-Agent' = 'markitdown-context-menu'; 'Accept' = 'application/vnd.github+json' }
+        $r = Invoke-RestMethod -Uri $uri -Headers $headers -TimeoutSec $TimeoutSec -ErrorAction Stop
+        $tag = $r.tag_name
+        if ([string]::IsNullOrWhiteSpace($tag)) { return $null }
+        return ($tag -replace '^v', '')
+    } catch { return $null }
+}
+
 # Pure comparison: is $Latest a newer release than $Installed?
 function Test-UpdateAvailable {
     param([string]$Installed, [string]$Latest)
@@ -113,4 +141,4 @@ function Confirm-Runtime {
     return $true
 }
 
-Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Get-MarkItDownVersion, Get-LatestMarkItDownVersion, Test-UpdateAvailable, Update-MarkItDown, Install-Python, Install-MarkItDown, Confirm-Runtime
+Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Get-MarkItDownVersion, Get-LatestMarkItDownVersion, Get-ToolVersion, Get-LatestToolVersion, Test-UpdateAvailable, Update-MarkItDown, Install-Python, Install-MarkItDown, Confirm-Runtime
