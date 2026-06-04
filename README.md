@@ -3,6 +3,8 @@
 Right-click any supported file or folder in Windows Explorer to convert it to
 Markdown with Microsoft's [`markitdown`](https://github.com/microsoft/markitdown).
 
+![Context menu](doc/context_menu.png)
+
 **MarkItDown** is Microsoft's open-source tool that turns documents — PDFs,
 Office files, images, web pages, and more — into clean Markdown, ideal for
 feeding content to LLMs or storing it as plain text. This project wires it into
@@ -10,11 +12,6 @@ the Explorer right-click menu so a conversion is one click away.
 
 **Target OS:** Windows 10 and Windows 11.
 
-## Screenshots
-
-| Context menu | Settings |
-|---|---|
-| ![Context menu](doc/context_menu.png) | ![Settings](doc/settings.png) |
 
 ## Features
 
@@ -73,3 +70,7 @@ For a fully clean update, uninstall first, then install.
 ## Uninstall
 
 Run `uninstall.ps1`, or use the **Uninstall** button in the settings window.
+
+## Settings
+
+![Context menu](doc/settings.png)
