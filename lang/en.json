@@ -4,6 +4,7 @@
   "menu.save": "Save (.md)",
   "menu.clip": "Copy to clipboard",
   "menu.open": "Save & open",
+  "menu.settings": "Settings…",
   "toast.title": "MarkItDown",
   "toast.done": "{0} converted",
   "toast.partial": "{0}/{1} converted, {2} failed",

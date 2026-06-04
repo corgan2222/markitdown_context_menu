@@ -5,7 +5,7 @@ Add-Type -AssemblyName System.Drawing
 
 $here    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $appRoot = Split-Path -Parent $here
-foreach ($m in 'Paths','Config','I18n','Registry','Runtime','Toast') {
+foreach ($m in 'Paths','Config','I18n','Registry','Runtime','Toast','Icons') {
     Import-Module (Join-Path $here "modules/$m.psm1") -Force
 }
 
@@ -19,7 +19,8 @@ $current  = @(Get-RegisteredExtensions)
 
 # launcher command embedded into every registry verb
 $launcherCmd = 'wscript "' + (Join-Path $appRoot 'src\HiddenLaunch.vbs') + '"'
-$iconPath    = Join-Path $appRoot 'images\markdown-icon.ico'
+$settingsCmd = 'wscript "' + (Join-Path $appRoot 'src\HiddenConfigure.vbs') + '"'
+$icons       = Get-IconSet -ImagesDir (Join-Path $appRoot 'images') -Dark:(Test-DarkMode)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = T 'gui.title'
@@ -85,12 +86,12 @@ $btnSave.Add_Click({
     Set-Settings -Path (Get-SettingsPath) -Settings ([pscustomobject]@{ Language=$lang; DefaultAction=$mode })
     $codeNew = Resolve-Language -Setting $lang -Available @('de','en')
     $Snew = Import-Language -LangDir (Join-Path $appRoot 'lang') -Code $codeNew
-    $labels = @{ direct=$Snew['menu.direct']; options=$Snew['menu.options']; save=$Snew['menu.save']; clip=$Snew['menu.clip']; open=$Snew['menu.open'] }
+    $labels = @{ direct=$Snew['menu.direct']; options=$Snew['menu.options']; save=$Snew['menu.save']; clip=$Snew['menu.clip']; open=$Snew['menu.open']; settings=$Snew['menu.settings'] }
 
     $diff = Get-SelectionDiff -Desired $desired -Current @(Get-RegisteredExtensions)
     foreach ($e in $diff.ToRemove) { Unregister-MenuForExtension -Extension $e }
-    foreach ($e in $desired)       { Register-MenuForExtension -Extension $e -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath }
-    Register-MenuForFolder -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath
+    foreach ($e in $desired)       { Register-MenuForExtension -Extension $e -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -Icons $icons -SettingsCommand $settingsCmd }
+    Register-MenuForFolder -DefaultMode $mode -Labels $labels -LauncherCommand $launcherCmd -Icons $icons -SettingsCommand $settingsCmd
     [System.Windows.Forms.MessageBox]::Show((T 'gui.saved')) | Out-Null
 })
 

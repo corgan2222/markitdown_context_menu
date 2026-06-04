@@ -4,6 +4,7 @@
   "menu.save": "Speichern (.md)",
   "menu.clip": "In Zwischenablage",
   "menu.open": "Speichern & öffnen",
+  "menu.settings": "Einstellungen…",
   "toast.title": "MarkItDown",
   "toast.done": "{0} konvertiert",
   "toast.partial": "{0}/{1} konvertiert, {2} Fehler",

@@ -6,6 +6,7 @@ Import-Module (Join-Path $src 'src/modules/Paths.psm1') -Force
 Import-Module (Join-Path $src 'src/modules/Config.psm1') -Force
 Import-Module (Join-Path $src 'src/modules/I18n.psm1') -Force
 Import-Module (Join-Path $src 'src/modules/Registry.psm1') -Force
+Import-Module (Join-Path $src 'src/modules/Icons.psm1') -Force
 
 $dest = Get-InstallDir
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -16,13 +17,14 @@ foreach ($d in 'src','config','lang','images') {
 $settings = Get-Settings -Path (Get-SettingsPath)
 $code   = Resolve-Language -Setting $settings.Language -Available @('de','en')
 $S      = Import-Language -LangDir (Join-Path $dest 'lang') -Code $code
-$labels = @{ direct=$S['menu.direct']; options=$S['menu.options']; save=$S['menu.save']; clip=$S['menu.clip']; open=$S['menu.open'] }
+$labels = @{ direct=$S['menu.direct']; options=$S['menu.options']; save=$S['menu.save']; clip=$S['menu.clip']; open=$S['menu.open']; settings=$S['menu.settings'] }
 $launcherCmd = 'wscript "' + (Join-Path $dest 'src\HiddenLaunch.vbs') + '"'
-$iconPath    = Join-Path $dest 'images\markdown-icon.ico'
+$settingsCmd = 'wscript "' + (Join-Path $dest 'src\HiddenConfigure.vbs') + '"'
+$icons       = Get-IconSet -ImagesDir (Join-Path $dest 'images') -Dark:(Test-DarkMode)
 
 $defaults = '.pdf','.docx','.xlsx','.pptx','.png','.jpg','.html','.csv'
-foreach ($e in $defaults) { Register-MenuForExtension -Extension $e -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath }
-Register-MenuForFolder -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -IconPath $iconPath
+foreach ($e in $defaults) { Register-MenuForExtension -Extension $e -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -Icons $icons -SettingsCommand $settingsCmd }
+Register-MenuForFolder -DefaultMode $settings.DefaultAction -Labels $labels -LauncherCommand $launcherCmd -Icons $icons -SettingsCommand $settingsCmd
 
 # Start-menu shortcut to the GUI
 $lnkDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
