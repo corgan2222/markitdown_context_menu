@@ -19,9 +19,22 @@ function Get-FilesToConvert {
 # Single external seam — mocked in tests.
 function Invoke-MarkItDownCli {
     param([Parameter(Mandatory)][string]$InputPath)
-    $out = & python -m markitdown $InputPath 2>&1
-    if ($LASTEXITCODE -ne 0) { throw ($out -join [Environment]::NewLine) }
-    ($out -join [Environment]::NewLine)
+    # 1. Force Python to output to stdout/stderr in UTF-8
+    $env:PYTHONIOENCODING = "utf-8"
+    # 2. Temporarily change the PowerShell output encoding to UTF-8
+    $oldEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    try {
+        $out = & python -m markitdown $InputPath 2>&1
+        if ($LASTEXITCODE -ne 0) { 
+            throw ($out -join [Environment]::NewLine) 
+        }
+        return ($out -join [Environment]::NewLine)
+    }
+    finally {
+        # 3. Restore the original encoding to avoid affecting other functions
+        [Console]::OutputEncoding = $oldEncoding
+    }
 }
 
 function Convert-Files {
