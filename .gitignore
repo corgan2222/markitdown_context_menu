@@ -3,7 +3,6 @@
 queue.txt
 settings.json
 .code-review-graph/
-.claude/
 .vscode/
 test_files/
 docs/
