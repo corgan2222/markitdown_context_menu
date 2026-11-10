@@ -20,20 +20,24 @@ function Get-FilesToConvert {
 # Single external seam — mocked in tests.
 function Invoke-MarkItDownCli {
     param([Parameter(Mandatory)][string]$InputPath, [switch]$IncludeComments)
-    if ($IncludeComments) {
-        $helper = Join-Path (Split-Path -Parent $PSScriptRoot) 'ConvertDocxWithComments.py'
-        $previousEncoding = [Console]::OutputEncoding
-        try {
-            [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+    # Python writes UTF-8 and PowerShell reads UTF-8, whatever the console code page is.
+    $env:PYTHONIOENCODING = "utf-8"
+    $oldEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+    try {
+        if ($IncludeComments) {
+            $helper = Join-Path (Split-Path -Parent $PSScriptRoot) 'ConvertDocxWithComments.py'
             $out = & python -X utf8 $helper $InputPath 2>&1
-        } finally {
-            [Console]::OutputEncoding = $previousEncoding
+        } else {
+            $out = & python -m markitdown $InputPath 2>&1
         }
-    } else {
-        $out = & python -m markitdown $InputPath 2>&1
+        if ($LASTEXITCODE -ne 0) { throw ($out -join [Environment]::NewLine) }
+        return ($out -join [Environment]::NewLine)
     }
-    if ($LASTEXITCODE -ne 0) { throw ($out -join [Environment]::NewLine) }
-    ($out -join [Environment]::NewLine)
+    finally {
+        # Restore the original encoding to avoid affecting other functions
+        [Console]::OutputEncoding = $oldEncoding
+    }
 }
 
 function Convert-Files {
