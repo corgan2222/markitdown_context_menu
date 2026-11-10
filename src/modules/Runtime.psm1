@@ -14,7 +14,7 @@ function Test-PythonVersion {
 }
 
 # markitdown 0.1.8+ declares Requires-Python <3.15 (PyPI, 2026-11-10); on 3.15 pip falls back to 0.0.2.
-# ponytail: fixed ceiling, raise it once markitdown supports the next Python.
+# Fixed ceiling: raise it once markitdown supports the next Python.
 $script:PythonBelow = [version]'3.15'
 
 # Pure: interpreter paths from `py -0p` output that markitdown supports, newest first.
