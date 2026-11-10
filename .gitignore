@@ -7,3 +7,5 @@ settings.json
 .vscode/
 test_files/
 docs/
+__pycache__/
+*.py[cod]

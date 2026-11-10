@@ -17,6 +17,7 @@ the Explorer right-click menu so a conversion is one click away.
 - Convert a single file, a multi-file selection, or a whole folder (recursive).
 - Three actions: save `.md` beside the source, copy Markdown to the clipboard,
   or save & open.
+- DOCX-only action to save the document and its comments together.
 - One configurable direct entry plus an options submenu with all actions.
 - Per-user install — no admin rights required.
 - Checkbox GUI to pick which file types show the menu.
@@ -46,6 +47,14 @@ Right-click a file, several files, or a folder:
 
 - **In Markdown umwandeln / Convert to Markdown** — runs the default action.
 - **… (Optionen) / … (Options)** — choose: save `.md`, copy to clipboard, or save & open.
+
+For a `.docx` file, the options submenu also offers **Save with comments (.md)**.
+This writes `filename.with-comments.md` beside the source, with comment references
+in the body and comment text at the end. The ordinary `filename.md` conversion
+is preserved. This action requires MarkItDown 0.1.8 or newer; use the settings
+window to update if needed. It supports multiple selected DOCX files and is not
+shown for other file types or folders. It includes comments, not a tracked-change
+review or a full reproduction of Word's comment interface.
 
 On Windows 11 the entries appear under **"Show more options"** (Shift+Right-click).
 

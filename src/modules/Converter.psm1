@@ -1,7 +1,8 @@
 function Get-OutputPath {
-    param([Parameter(Mandatory)][string]$InputPath)
+    param([Parameter(Mandatory)][string]$InputPath, [switch]$IncludeComments)
     $dir  = [IO.Path]::GetDirectoryName($InputPath)
     $name = [IO.Path]::GetFileNameWithoutExtension($InputPath)
+    if ($IncludeComments) { return Join-Path $dir "$name.with-comments.md" }
     Join-Path $dir "$name.md"
 }
 
@@ -18,21 +19,23 @@ function Get-FilesToConvert {
 
 # Single external seam — mocked in tests.
 function Invoke-MarkItDownCli {
-    param([Parameter(Mandatory)][string]$InputPath)
-    # 1. Force Python to output to stdout/stderr in UTF-8
+    param([Parameter(Mandatory)][string]$InputPath, [switch]$IncludeComments)
+    # Python writes UTF-8 and PowerShell reads UTF-8, whatever the console code page is.
     $env:PYTHONIOENCODING = "utf-8"
-    # 2. Temporarily change the PowerShell output encoding to UTF-8
     $oldEncoding = [Console]::OutputEncoding
-    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
     try {
-        $out = & python -m markitdown $InputPath 2>&1
-        if ($LASTEXITCODE -ne 0) { 
-            throw ($out -join [Environment]::NewLine) 
+        if ($IncludeComments) {
+            $helper = Join-Path (Split-Path -Parent $PSScriptRoot) 'ConvertDocxWithComments.py'
+            $out = & python -X utf8 $helper $InputPath 2>&1
+        } else {
+            $out = & python -m markitdown $InputPath 2>&1
         }
+        if ($LASTEXITCODE -ne 0) { throw ($out -join [Environment]::NewLine) }
         return ($out -join [Environment]::NewLine)
     }
     finally {
-        # 3. Restore the original encoding to avoid affecting other functions
+        # Restore the original encoding to avoid affecting other functions
         [Console]::OutputEncoding = $oldEncoding
     }
 }
@@ -40,14 +43,20 @@ function Invoke-MarkItDownCli {
 function Convert-Files {
     param(
         [Parameter(Mandatory)][string[]]$Files,
-        [Parameter(Mandatory)][ValidateSet('save','clip','open')][string]$Mode
+        [Parameter(Mandatory)][ValidateSet('save','clip','open','comments')][string]$Mode
     )
     $results = New-Object System.Collections.Generic.List[object]
     $clipBuffer = New-Object System.Collections.Generic.List[string]
     foreach ($f in $Files) {
         try {
-            $md = Invoke-MarkItDownCli -InputPath $f
+            if ($Mode -eq 'comments') {
+                if ([IO.Path]::GetExtension($f) -ine '.docx') { throw 'Including comments requires a .docx file.' }
+                $md = Invoke-MarkItDownCli -InputPath $f -IncludeComments
+            } else {
+                $md = Invoke-MarkItDownCli -InputPath $f
+            }
             switch ($Mode) {
+                'comments' { Set-Content -LiteralPath (Get-OutputPath $f -IncludeComments) -Value $md -Encoding utf8 }
                 'save' { Set-Content -Path (Get-OutputPath $f) -Value $md -Encoding utf8 }
                 'open' {
                     $o = Get-OutputPath $f

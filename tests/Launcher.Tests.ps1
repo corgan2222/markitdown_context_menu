@@ -3,6 +3,9 @@ BeforeAll {
 }
 
 Describe 'Get-LauncherArgs' {
+    It 'accepts the DOCX comments action' {
+        (Get-LauncherArgs -Argv @('comments','C:\review.docx')).Mode | Should -Be 'comments'
+    }
     It 'parses mode and path' {
         $a = Get-LauncherArgs -Argv @('save','C:\a\b.pdf')
         $a.Mode | Should -Be 'save'

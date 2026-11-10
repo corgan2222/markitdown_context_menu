@@ -4,6 +4,7 @@
   "menu.save": "Save (.md)",
   "menu.clip": "Copy to clipboard",
   "menu.open": "Save & open",
+  "menu.comments": "Save with comments (.md)",
   "menu.settings": "Settings…",
   "toast.title": "MarkItDown",
   "toast.done": "{0} converted",

@@ -169,7 +169,7 @@ $btnSave.Add_Click({
     Set-Settings -Path (Get-SettingsPath) -Settings ([pscustomobject]@{ Language=$lang; DefaultAction=$mode })
     $codeNew = Resolve-Language -Setting $lang -Available @('de','en')
     $Snew = Import-Language -LangDir (Join-Path $appRoot 'lang') -Code $codeNew
-    $labels = @{ direct=$Snew['menu.direct']; options=$Snew['menu.options']; save=$Snew['menu.save']; clip=$Snew['menu.clip']; open=$Snew['menu.open']; settings=$Snew['menu.settings'] }
+    $labels = @{ direct=$Snew['menu.direct']; options=$Snew['menu.options']; save=$Snew['menu.save']; clip=$Snew['menu.clip']; open=$Snew['menu.open']; comments=$Snew['menu.comments']; settings=$Snew['menu.settings'] }
 
     $diff = Get-SelectionDiff -Desired $desired -Current @(Get-RegisteredExtensions)
     foreach ($e in $diff.ToRemove) { Unregister-MenuForExtension -Extension $e }
