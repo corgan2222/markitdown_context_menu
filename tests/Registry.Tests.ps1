@@ -9,6 +9,20 @@ AfterAll {
 }
 
 Describe 'Extension menu roundtrip' {
+    It 'offers comment-inclusive conversion only for DOCX files' {
+        $labels = @{ direct='Convert'; options='Options'; save='Save'; clip='Clip'; open='Open'; comments='Save with comments' }
+        foreach ($ext in '.docx','.pdf') {
+            Register-MenuForExtension -Extension $ext -DefaultMode 'save' -Labels $labels -LauncherCommand 'wscript "launcher.vbs"' -ClassesRoot $script:root
+        }
+        $sub = "$script:root\SystemFileAssociations\.docx\shell\MarkItDownOptions\shell\04_comments"
+        (Get-ItemProperty $sub).MUIVerb | Should -Be 'Save with comments'
+        (Get-ItemProperty "$sub\command").'(default)' | Should -Be 'wscript "launcher.vbs" comments "%1"'
+        (Test-Path "$script:root\SystemFileAssociations\.pdf\shell\MarkItDownOptions\shell\04_comments") | Should -BeFalse
+        Register-MenuForFolder -DefaultMode 'save' -Labels $labels -LauncherCommand 'wscript x.vbs' -ClassesRoot $script:root
+        (Test-Path "$script:root\Directory\shell\MarkItDownOptions\shell\04_comments") | Should -BeFalse
+        foreach ($ext in '.docx','.pdf') { Unregister-MenuForExtension -Extension $ext -ClassesRoot $script:root }
+        Unregister-MenuForFolder -ClassesRoot $script:root
+    }
     It 'registers, lists, and unregisters an extension' {
         $labels = @{ direct='Convert'; options='Convert (Options)'; save='Save'; clip='Clip'; open='Open' }
         Register-MenuForExtension -Extension '.pdf' -DefaultMode 'save' -Labels $labels -LauncherCommand 'wscript x.vbs' -ClassesRoot $script:root

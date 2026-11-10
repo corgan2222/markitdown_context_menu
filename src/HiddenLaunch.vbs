@@ -1,6 +1,6 @@
 ' Hidden launcher for the MarkItDown context menu.
 ' Starts pwsh running Launcher.ps1 with no visible console window.
-' Args: 0 = mode (save|clip|open), 1 = target path
+' Args: 0 = mode (save|clip|open|comments), 1 = target path
 Option Explicit
 
 Dim args, mode, target, scriptDir, launcher, shell, cmd

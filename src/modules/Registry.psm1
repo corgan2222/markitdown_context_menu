@@ -17,7 +17,7 @@ function Set-Verb {
 function Set-OptionsVerb {
     param(
         [string]$ShellPath, [hashtable]$Labels, [string]$LauncherCommand, [string]$Arg = '%1',
-        [hashtable]$Icons = @{}, [string]$SettingsCommand
+        [hashtable]$Icons = @{}, [string]$SettingsCommand, [switch]$IncludeComments
     )
     New-RegKey "$ShellPath\MarkItDownOptions"
     Set-ItemProperty "$ShellPath\MarkItDownOptions" -Name 'MUIVerb' -Value $Labels.options
@@ -28,6 +28,9 @@ function Set-OptionsVerb {
         '01_save' = @{ label = $Labels.save; icon = $Icons.save; cmd = ("{0} save `"{1}`"" -f $LauncherCommand, $Arg) }
         '02_clip' = @{ label = $Labels.clip; icon = $Icons.clip; cmd = ("{0} clip `"{1}`"" -f $LauncherCommand, $Arg) }
         '03_open' = @{ label = $Labels.open; icon = $Icons.open; cmd = ("{0} open `"{1}`"" -f $LauncherCommand, $Arg) }
+    }
+    if ($IncludeComments) {
+        $children['04_comments'] = @{ label = $Labels.comments; icon = $Icons.save; cmd = ("{0} comments `"{1}`"" -f $LauncherCommand, $Arg) }
     }
     if ($SettingsCommand) {
         $children['04_settings'] = @{ label = $Labels.settings; icon = $Icons.settings; cmd = $SettingsCommand }
@@ -55,7 +58,7 @@ function Register-MenuForExtension {
     $shell = "$ClassesRoot\SystemFileAssociations\$Extension\shell"
     New-RegKey $shell
     Set-Verb -ShellPath $shell -Label $Labels.direct -Mode $DefaultMode -LauncherCommand $LauncherCommand -IconPath $Icons.direct
-    Set-OptionsVerb -ShellPath $shell -Labels $Labels -LauncherCommand $LauncherCommand -Icons $Icons -SettingsCommand $SettingsCommand
+    Set-OptionsVerb -ShellPath $shell -Labels $Labels -LauncherCommand $LauncherCommand -Icons $Icons -SettingsCommand $SettingsCommand -IncludeComments:($Extension -ieq '.docx')
 }
 
 function Unregister-MenuForExtension {

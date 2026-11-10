@@ -6,9 +6,9 @@ param(
 
 function Get-LauncherArgs {
     param([string[]]$Argv)
-    if ($Argv.Count -lt 2) { throw "Usage: Launcher <save|clip|open> <path>" }
+    if ($Argv.Count -lt 2) { throw "Usage: Launcher <save|clip|open|comments> <path>" }
     $mode = $Argv[0]
-    if ($mode -notin @('save','clip','open')) { throw "Unknown mode: $mode" }
+    if ($mode -notin @('save','clip','open','comments')) { throw "Unknown mode: $mode" }
     [pscustomobject]@{ Mode = $mode; Path = $Argv[1] }
 }
 
@@ -29,6 +29,11 @@ function Invoke-Launcher {
 
     $queue = Get-QueuePath
     $mutex = 'MarkItDownMenuQueue'
+    # Keep comment-inclusive selections separate from ordinary conversions.
+    if ($Mode -eq 'comments') {
+        $queue = [IO.Path]::ChangeExtension($queue, 'comments.txt')
+        $mutex += '.comments'
+    }
     $isOwner = Add-ToQueue -QueuePath $queue -Path $Path -MutexName $mutex
     if (-not $isOwner) { return }
     Start-Sleep -Milliseconds 800

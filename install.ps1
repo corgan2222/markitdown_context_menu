@@ -20,7 +20,7 @@ if (Test-Path -LiteralPath $versionFile) { Copy-Item -Path $versionFile -Destina
 $settings = Get-Settings -Path (Get-SettingsPath)
 $code   = Resolve-Language -Setting $settings.Language -Available @('de','en')
 $S      = Import-Language -LangDir (Join-Path $dest 'lang') -Code $code
-$labels = @{ direct=$S['menu.direct']; options=$S['menu.options']; save=$S['menu.save']; clip=$S['menu.clip']; open=$S['menu.open']; settings=$S['menu.settings'] }
+$labels = @{ direct=$S['menu.direct']; options=$S['menu.options']; save=$S['menu.save']; clip=$S['menu.clip']; open=$S['menu.open']; comments=$S['menu.comments']; settings=$S['menu.settings'] }
 $launcherCmd = 'wscript "' + (Join-Path $dest 'src\HiddenLaunch.vbs') + '"'
 $settingsCmd = 'wscript "' + (Join-Path $dest 'src\HiddenConfigure.vbs') + '"'
 $icons       = Get-IconSet -ImagesDir (Join-Path $dest 'images') -Dark:(Test-DarkMode)

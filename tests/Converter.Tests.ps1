@@ -29,6 +29,24 @@ Describe 'Get-FilesToConvert' {
 }
 
 Describe 'Convert-Files' {
+    It 'saves DOCX comments separately without overwriting the ordinary conversion' {
+        $f = Join-Path $TestDrive 'review [draft].DOCX'; Set-Content -LiteralPath $f 'x'
+        $ordinary = Join-Path $TestDrive 'review [draft].md'
+        Set-Content -LiteralPath $ordinary 'Keep this'
+        Mock -ModuleName Converter Invoke-MarkItDownCli { 'Body and comment' }
+        $res = Convert-Files -Files @($f) -Mode 'comments'
+        $res[0].Success | Should -BeTrue
+        (Get-Content -Raw -LiteralPath (Join-Path $TestDrive 'review [draft].with-comments.md')).Trim() | Should -Be 'Body and comment'
+        (Get-Content -Raw -LiteralPath $ordinary).Trim() | Should -Be 'Keep this'
+        Should -Invoke -ModuleName Converter Invoke-MarkItDownCli -Times 1 -Exactly -ParameterFilter { $IncludeComments }
+    }
+    It 'rejects other file types in comments mode without running conversion' {
+        Mock -ModuleName Converter Invoke-MarkItDownCli { throw 'Should not run' }
+        $res = Convert-Files -Files @('not-a-docx.pdf') -Mode 'comments'
+        $res[0].Success | Should -BeFalse
+        $res[0].Error | Should -Match 'requires a .docx'
+        Should -Invoke -ModuleName Converter Invoke-MarkItDownCli -Times 0
+    }
     It 'save mode writes a .md next to the source' {
         $f = Join-Path $TestDrive 'doc.pdf'; Set-Content $f 'x'
         Mock -ModuleName Converter Invoke-MarkItDownCli { '# Title' }
