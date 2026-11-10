@@ -13,25 +13,60 @@ function Test-PythonVersion {
     $Version -ge $Minimum
 }
 
+# markitdown 0.1.8+ declares Requires-Python <3.15 (PyPI, 2026-11-10); on 3.15 pip falls back to 0.0.2.
+# ponytail: fixed ceiling, raise it once markitdown supports the next Python.
+$script:PythonBelow = [version]'3.15'
+
+# Pure: interpreter paths from `py -0p` output that markitdown supports, newest first.
+function Select-PythonFromPyList {
+    param([string[]]$Lines, [version]$Below = $script:PythonBelow, [version]$Minimum = ([version]'3.10'))
+    $found = foreach ($l in $Lines) {
+        if ($l -notmatch '^\s*-V:(\S+)\s+(?:\*\s+)?(.+?\.exe)\s*$') { continue }
+        $tag = $Matches[1]; $path = $Matches[2]
+        if ($tag -match 't$') { continue }   # free-threaded build
+        if ($tag -notmatch '(\d+)\.(\d+)') { continue }
+        $v = [version]("{0}.{1}" -f $Matches[1], $Matches[2])
+        if ($v -lt $Minimum -or $v -ge $Below) { continue }
+        [pscustomobject]@{ Version = $v; Path = $path }
+    }
+    @($found | Sort-Object Version -Descending | ForEach-Object Path)
+}
+
 # --- side-effecting helpers (smoke-tested manually) ---
+
+# The interpreter every call uses: the newest one markitdown supports, else plain `python`.
+function Get-PythonCommand {
+    if ($script:PythonCommand) { return $script:PythonCommand }
+    $script:PythonCommand = 'python'
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        $list = @(& py -0p 2>$null)
+        foreach ($p in Select-PythonFromPyList -Lines $list) {
+            # pip --user refuses an externally managed interpreter (for example one installed by uv)
+            if (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $p) 'Lib\EXTERNALLY-MANAGED')) { continue }
+            $script:PythonCommand = $p
+            break
+        }
+    }
+    $script:PythonCommand
+}
 
 function Get-PythonVersion {
     try {
-        $out = & python --version 2>&1
+        $out = & (Get-PythonCommand) --version 2>&1
         return ConvertTo-PythonVersion -Text ($out -join ' ')
     } catch { return $null }
 }
 
 function Test-MarkItDownInstalled {
     try {
-        & python -c "import markitdown" *> $null
+        & (Get-PythonCommand) -c "import markitdown" *> $null
         return ($LASTEXITCODE -eq 0)
     } catch { return $false }
 }
 
 function Get-MarkItDownVersion {
     try {
-        $out = & python -c "import importlib.metadata as m; print(m.version('markitdown'))" 2>$null
+        $out = & (Get-PythonCommand) -c "import importlib.metadata as m; print(m.version('markitdown'))" 2>$null
         if ($LASTEXITCODE -eq 0 -and $out) { return (@($out)[0]).Trim() }
         return $null
     } catch { return $null }
@@ -102,13 +137,14 @@ function Test-UpdateAvailable {
 }
 
 function Update-MarkItDown {
-    & python -m pip install --user --upgrade "markitdown[all]"
+    & (Get-PythonCommand) -m pip install --user --upgrade "markitdown[all]"
     return ($LASTEXITCODE -eq 0)
 }
 
 function Install-Python {
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         winget install --id Python.Python.3.12 --scope user --silent --accept-package-agreements --accept-source-agreements
+        $script:PythonCommand = $null   # pick again, the new interpreter may be the right one
         return ($LASTEXITCODE -eq 0)
     }
     Start-Process 'https://www.python.org/downloads/windows/'
@@ -116,7 +152,7 @@ function Install-Python {
 }
 
 function Install-MarkItDown {
-    & python -m pip install --user "markitdown[all]"
+    & (Get-PythonCommand) -m pip install --user "markitdown[all]"
     return ($LASTEXITCODE -eq 0)
 }
 
@@ -141,4 +177,4 @@ function Confirm-Runtime {
     return $true
 }
 
-Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Get-PythonVersion, Test-MarkItDownInstalled, Get-MarkItDownVersion, Get-LatestMarkItDownVersion, Get-ToolVersion, Get-LatestToolVersion, Test-UpdateAvailable, Update-MarkItDown, Install-Python, Install-MarkItDown, Confirm-Runtime
+Export-ModuleMember -Function ConvertTo-PythonVersion, Test-PythonVersion, Select-PythonFromPyList, Get-PythonCommand, Get-PythonVersion, Test-MarkItDownInstalled, Get-MarkItDownVersion, Get-LatestMarkItDownVersion, Get-ToolVersion, Get-LatestToolVersion, Test-UpdateAvailable, Update-MarkItDown, Install-Python, Install-MarkItDown, Confirm-Runtime
