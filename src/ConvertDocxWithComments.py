@@ -15,7 +15,10 @@ def convert_with_comments(path: Path) -> str:
     # Older versions silently ignore style_map, producing incomplete output.
     installed = tuple(int(n) for n in re.findall(r"\d+", version("markitdown"))[:3])
     if installed < (0, 1, 8):
-        raise RuntimeError("Including comments requires markitdown 0.1.8 or newer. Update markitdown in Settings.")
+        raise RuntimeError(
+            "Including comments requires markitdown 0.1.8 or newer. Update markitdown in Settings. "
+            f"If it stays older, markitdown 0.1.8+ may not support Python {sys.version_info[0]}.{sys.version_info[1]} yet."
+        )
     result = MarkItDown().convert(str(path), style_map="comment-reference => sup")
     return result.text_content
 
