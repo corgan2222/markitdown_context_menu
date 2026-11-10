@@ -1,3 +1,5 @@
+Import-Module (Join-Path $PSScriptRoot 'Runtime.psm1')   # Get-PythonCommand
+
 function Get-OutputPath {
     param([Parameter(Mandatory)][string]$InputPath, [switch]$IncludeComments)
     $dir  = [IO.Path]::GetDirectoryName($InputPath)
@@ -27,9 +29,9 @@ function Invoke-MarkItDownCli {
     try {
         if ($IncludeComments) {
             $helper = Join-Path (Split-Path -Parent $PSScriptRoot) 'ConvertDocxWithComments.py'
-            $out = & python -X utf8 $helper $InputPath 2>&1
+            $out = & (Get-PythonCommand) -X utf8 $helper $InputPath 2>&1
         } else {
-            $out = & python -m markitdown $InputPath 2>&1
+            $out = & (Get-PythonCommand) -m markitdown $InputPath 2>&1
         }
         if ($LASTEXITCODE -ne 0) { throw ($out -join [Environment]::NewLine) }
         return ($out -join [Environment]::NewLine)

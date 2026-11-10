@@ -2,6 +2,38 @@ BeforeAll {
     Import-Module "$PSScriptRoot/../src/modules/Runtime.psm1" -Force
 }
 
+Describe 'Select-PythonFromPyList' {
+    BeforeAll {
+        # `py -0p` as measured on a machine with 3.11-3.15, a free-threaded 3.15t and a uv-managed 3.14
+        $script:list = @(
+            ' -V:3.15t *       C:\Python\Python315\python3.15t.exe'
+            ' -V:3.15          C:\Python\Python315\python.exe'
+            ' -V:3.13          C:\Python\Python313\python.exe'
+            ' -V:3.12          C:\Python\Python312\python.exe'
+            ' -V:3.11          C:\Python\Python311\python.exe'
+            ' -V:Astral/CPython3.14.5 C:\Users\x\AppData\Roaming\uv\python\cpython-3.14.5-windows-x86_64-none\python.exe'
+        )
+    }
+    It 'returns supported interpreters newest first, skipping 3.15 and free-threaded builds' {
+        Select-PythonFromPyList -Lines $script:list -Below '3.15' | Should -Be @(
+            'C:\Users\x\AppData\Roaming\uv\python\cpython-3.14.5-windows-x86_64-none\python.exe'
+            'C:\Python\Python313\python.exe'
+            'C:\Python\Python312\python.exe'
+            'C:\Python\Python311\python.exe'
+        )
+    }
+    It 'takes a default entry marked with * like any other' {
+        Select-PythonFromPyList -Lines @(' -V:3.12 *        C:\P\python.exe') -Below '3.15' | Should -Be 'C:\P\python.exe'
+    }
+    It 'drops versions below the minimum' {
+        Select-PythonFromPyList -Lines @(' -V:3.9          C:\P39\python.exe') -Below '3.15' | Should -BeNullOrEmpty
+    }
+    It 'returns nothing for empty or unknown output' {
+        Select-PythonFromPyList -Lines @() | Should -BeNullOrEmpty
+        Select-PythonFromPyList -Lines @('No installed Pythons found!') | Should -BeNullOrEmpty
+    }
+}
+
 Describe 'ConvertTo-PythonVersion' {
     It 'parses a standard python --version string' {
         (ConvertTo-PythonVersion -Text 'Python 3.12.1').ToString() | Should -Be '3.12.1'
