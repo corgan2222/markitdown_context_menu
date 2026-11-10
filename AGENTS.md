@@ -62,6 +62,11 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File install.ps1
 the call. The hidden launcher runs with the OEM code page, so without that
 umlauts and CJK text arrive broken.
 
+**Every Python call goes through `Get-PythonCommand`.** It picks the newest
+interpreter markitdown supports via `py -0p` (below 3.15, no free-threaded or
+externally managed builds) and falls back to `python`. A bare `python` call
+can land on a version where pip only finds an outdated markitdown.
+
 **A new string goes into both language files.** `lang/de.json` and
 `lang/en.json` carry the same keys.
 
